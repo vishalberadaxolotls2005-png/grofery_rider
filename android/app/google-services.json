@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "731593120675",
+    "project_id": "grofery-rider-prod-ax",
+    "storage_bucket": "grofery-rider-prod-ax.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:731593120675:android:713565c18af1ead3a49816",
+        "android_client_info": {
+          "package_name": "com.axolotls.grofery_rider"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBIxCXBCksBKvWY_4YkLb_if_VCeqlyrAI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
