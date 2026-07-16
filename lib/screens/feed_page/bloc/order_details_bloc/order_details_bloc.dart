@@ -56,11 +56,66 @@ class OrderDetailsBloc extends Bloc<OrderDetailsEvent, OrderDetailsState> {
 
     emit(OrderDetailsLoading());
     try {
-      final response = await _orderDetailsRepo.getOrderDetails(event.orderId);
+      if (event.groupOrderIds != null && event.groupOrderIds!.isNotEmpty) {
+        // Fetch all orders in the group
+        final responses = await Future.wait(
+          event.groupOrderIds!.map((id) => _orderDetailsRepo.getOrderDetails(id))
+        );
 
-      if (response['success'] == true && response['data'] != null) {
+        // Find the primary order response (matching event.orderId)
+        final primaryResponse = responses.firstWhere(
+          (r) => r['success'] == true && r['data'] != null && r['data']['order']['id'] == event.orderId,
+          orElse: () => responses.firstWhere((r) => r['success'] == true && r['data'] != null)
+        );
 
-        final order = Orders.fromJson(response['data']['order']);
+        if (primaryResponse['success'] == true && primaryResponse['data'] != null) {
+          final primaryOrder = Orders.fromJson(primaryResponse['data']['order']);
+          List<Items> allItems = [];
+          
+          for (var response in responses) {
+            if (response['success'] == true && response['data'] != null) {
+              final parsedOrder = Orders.fromJson(response['data']['order']);
+              if (parsedOrder.items != null) {
+                final itemsWithOrderId = parsedOrder.items!.map((item) {
+                  return item.orderId != null 
+                      ? item 
+                      : item.copyWith(orderId: parsedOrder.id);
+                }).toList();
+                allItems.addAll(itemsWithOrderId);
+              }
+            }
+          }
+
+          final orderWithAllItems = primaryOrder.copyWith(items: allItems);
+          
+          if (orderWithAllItems.items != null) {
+            final updatedItems = await Future.wait(
+              orderWithAllItems.items!.map((item) async {
+                if (item.id != null) {
+                  final savedStatus = await _getReachedDestinationStatus(
+                    event.orderId, // Grouped items still tie back to the primary order view conceptually for this preference
+                    item.id!,
+                  );
+                  if (savedStatus == true) {
+                    return item.copyWith(reachedDestination: true);
+                  }
+                }
+                return item;
+              }),
+            );
+            emit(OrderDetailsSuccess(orderWithAllItems.copyWith(items: updatedItems)));
+          } else {
+            emit(OrderDetailsSuccess(orderWithAllItems));
+          }
+        } else {
+          emit(OrderDetailsError('Failed to fetch group order details'));
+        }
+      } else {
+        // Normal single order fetch
+        final response = await _orderDetailsRepo.getOrderDetails(event.orderId);
+
+        if (response['success'] == true && response['data'] != null) {
+          final order = Orders.fromJson(response['data']['order']);
 
 
         // Restore reachedDestination status from SharedPreferences
@@ -88,12 +143,13 @@ class OrderDetailsBloc extends Bloc<OrderDetailsEvent, OrderDetailsState> {
         } else {
           emit(OrderDetailsSuccess(order));
         }
-      } else {
-        emit(
-          OrderDetailsError(
-            response['message'] ?? 'Failed to fetch order details',
-          ),
-        );
+        } else {
+          emit(
+            OrderDetailsError(
+              response['message'] ?? 'Failed to fetch order details',
+            ),
+          );
+        }
       }
     } catch (error) {
       emit(OrderDetailsError(error.toString()));

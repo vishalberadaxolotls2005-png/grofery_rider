@@ -139,8 +139,15 @@ class MyAppRoute {
           final params = state.extra as Map<String, dynamic>;
           final order = params['order'] as Orders;
           final bloc = params['bloc'] as OrderDetailsBloc?;
+          final groupOrders = params['groupOrders'] as List<dynamic>?;
 
-          return platformPage(PickupRouteMapPage(order: order, bloc: bloc));
+          return platformPage(
+            PickupRouteMapPage(
+              order: order,
+              bloc: bloc,
+              groupOrders: groupOrders,
+            ),
+          );
         },
       ),
 
@@ -150,15 +157,17 @@ class MyAppRoute {
         pageBuilder: (context, state) {
           final params = state.extra as Map<String, dynamic>;
           final orderId = params['orderId'] as int;
-          final from = params['from'] as bool;
+          final from = params['from'] as bool? ?? false;
           final sourceTab = params['sourceTab'] as int?;
           final arrivalConfirmed = params['arrivalConfirmed'] as bool?;
+          final groupOrders = params['groupOrders'] as List<dynamic>?;
           return platformPage(
             OrderDetailsPageWithBloc(
               orderId: orderId,
               from: from,
               sourceTab: sourceTab,
               arrivalConfirmed: arrivalConfirmed,
+              groupOrders: groupOrders,
             ),
           );
         },
@@ -196,8 +205,14 @@ class MyAppRoute {
         pageBuilder: (context, state) {
           final params = state.extra as Map<String, dynamic>;
           final order = params['order'] as Orders;
+          final groupOrders = params['groupOrders'] as List<dynamic>?;
           return platformPage(
-            MapDeliveryPage(order: order, currentLat: '0', currentLng: '0'),
+            MapDeliveryPage(
+              order: order,
+              currentLat: '0',
+              currentLng: '0',
+              groupOrders: groupOrders,
+            ),
           );
         },
       ),

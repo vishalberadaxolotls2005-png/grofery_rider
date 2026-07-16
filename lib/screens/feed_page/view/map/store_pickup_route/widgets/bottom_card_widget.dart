@@ -16,6 +16,7 @@ class BottomCardWidget extends StatefulWidget {
   final List<RouteDetails> filteredStores;
   final bool shouldShowNumbers;
   final double distanceToStores; // Add distance parameter
+  final List<dynamic>? groupOrders;
 
   const BottomCardWidget({
     super.key,
@@ -24,6 +25,7 @@ class BottomCardWidget extends StatefulWidget {
     required this.filteredStores,
     required this.shouldShowNumbers,
     required this.distanceToStores, // Add distance parameter
+    this.groupOrders,
   });
 
   @override
@@ -171,6 +173,7 @@ class _BottomCardWidgetState extends State<BottomCardWidget> {
                             'orderId': widget.order.id!,
                             'from': true,
                             'sourceTab': 1, // 1 = My Orders tab
+                            'groupOrders': widget.groupOrders,
                           },
                         );
                       },

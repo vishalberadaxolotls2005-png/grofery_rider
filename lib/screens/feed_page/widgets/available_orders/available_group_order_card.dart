@@ -414,6 +414,7 @@ class _AvailableGroupOrderCardContent extends StatelessWidget {
           'order': order,
           'currentLat': destinationLat,
           'currentLng': destinationLng,
+          'groupOrders': clusterItem.cluster.orders,
         },
       );
     } catch (e) {
@@ -433,6 +434,7 @@ class _AvailableGroupOrderCardContent extends StatelessWidget {
           AppRoutes.pickupRouteMap,
           extra: {
             'order': order,
+            'groupOrders': clusterItem.cluster.orders,
           },
         );
       } catch (e) {

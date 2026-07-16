@@ -16,12 +16,14 @@ class MapDeliveryPage extends StatefulWidget {
   final Orders order;
   final String? currentLat;
   final String? currentLng;
+  final List<dynamic>? groupOrders;
 
   const MapDeliveryPage({
     super.key,
     required this.order,
     this.currentLat,
     this.currentLng,
+    this.groupOrders,
   });
 
   @override
@@ -291,8 +293,8 @@ class _MapDeliveryPageState extends State<MapDeliveryPage> {
               hasReachedDestination: _hasReachedDestination,
               filteredStores: _filteredStores,
               shouldShowNumbers: _filteredStores.length > 1,
-              distanceToStores:
-                  _distanceToStores, // Pass the calculated distance
+              distanceToStores: _distanceToStores, // Pass the calculated distance
+              groupOrders: widget.groupOrders,
             ),
           ],
         ),

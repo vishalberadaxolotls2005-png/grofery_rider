@@ -45,6 +45,7 @@ class OrderDetailsPage extends StatefulWidget {
   final bool from;
   final int? sourceTab; // 0 = Available Orders, 1 = My Orders
   final bool? arrivalConfirmed; // Whether arrival has been confirmed
+  final List<dynamic>? groupOrders; // List of orders if this is a group order
 
   const OrderDetailsPage({
     super.key,
@@ -52,6 +53,7 @@ class OrderDetailsPage extends StatefulWidget {
     this.from = false,
     this.sourceTab,
     this.arrivalConfirmed,
+    this.groupOrders,
   });
 
   @override
@@ -63,6 +65,7 @@ class OrderDetailsPageWithBloc extends StatelessWidget {
   final bool from;
   final int? sourceTab; // 0 = Available Orders, 1 = My Orders
   final bool? arrivalConfirmed; // Whether arrival has been confirmed
+  final List<dynamic>? groupOrders;
 
   const OrderDetailsPageWithBloc({
     super.key,
@@ -70,6 +73,7 @@ class OrderDetailsPageWithBloc extends StatelessWidget {
     this.from = false,
     this.sourceTab,
     this.arrivalConfirmed,
+    this.groupOrders,
   });
 
   @override
@@ -87,6 +91,7 @@ class OrderDetailsPageWithBloc extends StatelessWidget {
         from: from,
         sourceTab: sourceTab,
         arrivalConfirmed: arrivalConfirmed,
+        groupOrders: groupOrders,
       ),
     );
   }
@@ -160,6 +165,18 @@ class _OrderDetailsPageState extends State<OrderDetailsPage>
     return OrderService.areAllItemsDelivered(_fetchedOrder);
   }
 
+  List<int>? _getGroupOrderIds() {
+    if (widget.groupOrders == null || widget.groupOrders!.isEmpty) return null;
+    return widget.groupOrders!
+        .map((o) {
+          if (o is Orders) return o.id;
+          if (o is Map) return o['id'] as int?;
+          return null;
+        })
+        .whereType<int>()
+        .toList();
+  }
+
   @override
   void initState() {
     super.initState();
@@ -177,7 +194,9 @@ class _OrderDetailsPageState extends State<OrderDetailsPage>
     context.read<SystemSettingsBloc>().add(FetchSystemSettings());
 
     // Fetch order details from API
-    context.read<OrderDetailsBloc>().add(FetchOrderDetails(widget.orderId));
+    context.read<OrderDetailsBloc>().add(
+      FetchOrderDetails(widget.orderId, groupOrderIds: _getGroupOrderIds()),
+    );
 
     // Remove the post-frame callback that was causing state conflicts
     // WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -201,7 +220,6 @@ class _OrderDetailsPageState extends State<OrderDetailsPage>
     // Only refresh if we don't have order data
     // Don't refresh if we already have the latest state to preserve bloc updates
     if (_fetchedOrder == null) {
-
       _refreshOrderDataIfNeeded();
     } else {}
   }
@@ -210,7 +228,9 @@ class _OrderDetailsPageState extends State<OrderDetailsPage>
   void _refreshOrderDataIfNeeded() {
     // Only refresh if we have an order and it's been a while since last refresh
     if (_fetchedOrder != null) {
-      context.read<OrderDetailsBloc>().add(FetchOrderDetails(widget.orderId));
+      context.read<OrderDetailsBloc>().add(
+        FetchOrderDetails(widget.orderId, groupOrderIds: _getGroupOrderIds()),
+      );
     }
   }
 
@@ -232,7 +252,9 @@ class _OrderDetailsPageState extends State<OrderDetailsPage>
     // Clear local state first
 
     // Fetch fresh data from API
-    context.read<OrderDetailsBloc>().add(FetchOrderDetails(widget.orderId));
+    context.read<OrderDetailsBloc>().add(
+      FetchOrderDetails(widget.orderId, groupOrderIds: _getGroupOrderIds()),
+    );
 
     // After API response, restore reachedDestination status
     if (reachedDestinationItems.isNotEmpty) {}
@@ -252,54 +274,76 @@ class _OrderDetailsPageState extends State<OrderDetailsPage>
           if (state is ItemsCollectedSuccess) {
             if (_isCollectingAll) {
               _bulkSuccessCount++;
-              
+
               // Only show final toast when all items are done
               if (_bulkSuccessCount >= _bulkTotalCount) {
                 setState(() {
                   _isCollectingAll = false;
                   if (_fetchedOrder?.items != null) {
-                    List<Items> updatedItems = _fetchedOrder!.items!.map((item) {
-                      return item.status?.toLowerCase() != 'delivered' 
-                          ? item.copyWith(status: 'collected') 
-                          : item;
-                    }).toList();
-                    _fetchedOrder = _fetchedOrder!.copyWith(items: updatedItems);
+                    List<Items> updatedItems =
+                        _fetchedOrder!.items!.map((item) {
+                          return item.status?.toLowerCase() != 'delivered'
+                              ? item.copyWith(status: 'collected')
+                              : item;
+                        }).toList();
+                    _fetchedOrder = _fetchedOrder!.copyWith(
+                      items: updatedItems,
+                    );
                   }
                 });
 
                 ToastManager.show(
                   context: context,
-                  message: AppLocalizations.of(context)!.allItemsCollectedSuccessfully,
+                  message:
+                      AppLocalizations.of(
+                        context,
+                      )!.allItemsCollectedSuccessfully,
                   type: ToastType.success,
                 );
-                
-                context.read<OrderDetailsBloc>().add(FetchOrderDetails(widget.orderId));
+
+                context.read<OrderDetailsBloc>().add(
+                  FetchOrderDetails(
+                    widget.orderId,
+                    groupOrderIds: _getGroupOrderIds(),
+                  ),
+                );
               }
             } else {
               // Individual item success
               String? processedItemId;
               // Try to find which ID in our processing set just finished
-              // This is a bit tricky with Bloc but since we update state locally, 
+              // This is a bit tricky with Bloc but since we update state locally,
               // we can just refresh the whole order or find the one that matches.
               // For now, we rely on the fact that we can clear all since it's most likely the one that just finished.
-              
+
               setState(() {
                 // If we have items, we try to find which one would have transitioned
                 if (_fetchedOrder?.items != null) {
                   // Note: Since we can't easily know which specific event finished if multiple were concurrent,
                   // we refresh from API to be safe, but also do a local optimistic update.
                   // For simplicity, we clear the set once we get a success.
-                  _processingItemIds.clear(); 
+                  _processingItemIds.clear();
                 }
               });
 
-              context.read<OrderDetailsBloc>().add(FetchOrderDetails(widget.orderId));
+              context.read<OrderDetailsBloc>().add(
+                FetchOrderDetails(
+                  widget.orderId,
+                  groupOrderIds: _getGroupOrderIds(),
+                ),
+              );
 
               ToastManager.show(
                 context: context,
-                message: (widget.from && _fetchedOrder?.status?.toLowerCase() != 'assigned')
-                    ? AppLocalizations.of(context)!.itemDeliveredSuccessfully
-                    : AppLocalizations.of(context)!.itemCollectedSuccessfully,
+                message:
+                    (widget.from &&
+                            _fetchedOrder?.status?.toLowerCase() != 'assigned')
+                        ? AppLocalizations.of(
+                          context,
+                        )!.itemDeliveredSuccessfully
+                        : AppLocalizations.of(
+                          context,
+                        )!.itemCollectedSuccessfully,
                 type: ToastType.success,
               );
             }
@@ -328,11 +372,9 @@ class _OrderDetailsPageState extends State<OrderDetailsPage>
                   if (_fetchedOrder?.id != widget.orderId) {
                     _hasShownConfetti = false;
                   }
-
                 });
               } else if (state is OrderDetailsError) {
-                setState(() {
-                });
+                setState(() {});
               }
             },
             builder: (context, state) {
@@ -474,12 +516,10 @@ class _OrderDetailsPageState extends State<OrderDetailsPage>
                             _isItemsExpanded = !_isItemsExpanded;
                           });
                         },
-                        itemCards:
-                            order.items
-                                ?.map((item) => _buildItemCard(item))
-                                .toList() ??
-                            [],
-                        onCollectAll: (order.status?.toLowerCase() == 'assigned' && !_areAllItemsCollected())
+                        itemCards: _buildGroupedItemCards(),
+                        onCollectAll:
+                            (order.status?.toLowerCase() == 'assigned' &&
+                                    !_areAllItemsCollected())
                                 ? _collectAllItems
                                 : null,
                       ),
@@ -605,7 +645,7 @@ class _OrderDetailsPageState extends State<OrderDetailsPage>
     // Simplified and stricter logic for flow control
     bool allItemsCollected = _fetchedOrder!.items!.every((item) {
       return item.status?.toLowerCase() == 'collected' ||
-             item.status?.toLowerCase() == 'delivered';
+          item.status?.toLowerCase() == 'delivered';
     });
 
     bool allItemsDelivered = _fetchedOrder!.items!.every((item) {
@@ -614,12 +654,16 @@ class _OrderDetailsPageState extends State<OrderDetailsPage>
 
     // Check if any items have reached destination according to verified state
     bool anyItemsReachedDestination = _fetchedOrder!.items!.any(
-      (item) => item.reachedDestination == true || item.status?.toLowerCase() == 'delivered',
+      (item) =>
+          item.reachedDestination == true ||
+          item.status?.toLowerCase() == 'delivered',
     );
 
     // Case 1: All items collected but not yet reached destination -> View Pickup Route
     // This only appears after ALL items are definitively collected from the server
-    if (allItemsCollected && !anyItemsReachedDestination && !allItemsDelivered) {
+    if (allItemsCollected &&
+        !anyItemsReachedDestination &&
+        !allItemsDelivered) {
       return ActionBottomSheet(
         buttonText: AppLocalizations.of(context)!.viewPickupRoute,
         onPressed: () {
@@ -694,7 +738,7 @@ class _OrderDetailsPageState extends State<OrderDetailsPage>
       );
     }
   }
-  
+
   void _deliverItemWithoutOtp(Items item) async {
     if (item.id != null) {
       setState(() {
@@ -777,10 +821,11 @@ class _OrderDetailsPageState extends State<OrderDetailsPage>
   }
 
   void _collectAllItems() async {
-    final uncollectedItems = _fetchedOrder?.items?.where((item) {
-      return item.status?.toLowerCase() != 'collected' && 
-             item.status?.toLowerCase() != 'delivered';
-    }).toList();
+    final uncollectedItems =
+        _fetchedOrder?.items?.where((item) {
+          return item.status?.toLowerCase() != 'collected' &&
+              item.status?.toLowerCase() != 'delivered';
+        }).toList();
 
     if (uncollectedItems == null || uncollectedItems.isEmpty) return;
 
@@ -792,7 +837,9 @@ class _OrderDetailsPageState extends State<OrderDetailsPage>
 
     for (var item in uncollectedItems) {
       if (item.id != null) {
-        context.read<ItemsCollectedBloc>().add(ItemsCollected(item.id.toString()));
+        context.read<ItemsCollectedBloc>().add(
+          ItemsCollected(item.id.toString()),
+        );
       }
     }
   }
@@ -960,11 +1007,68 @@ class _OrderDetailsPageState extends State<OrderDetailsPage>
   }
 
   String _getStatusText() {
-    return OrderService.getStatusText(
-      context,
-      _fetchedOrder,
-      widget.from,
+    return OrderService.getStatusText(context, _fetchedOrder, widget.from);
+  }
+
+  Widget _buildGroupHeader(int orderId) {
+    return Padding(
+      padding: EdgeInsets.only(top: 8.h, bottom: 12.h, left: 4.w),
+      child: Row(
+        children: [
+          Icon(Icons.receipt_long, size: 18.sp, color: AppColors.primaryColor),
+          SizedBox(width: 8.w),
+          CustomText(
+            text: 'Order #$orderId',
+            fontSize: 15.sp,
+            fontWeight: FontWeight.bold,
+            color: AppColors.primaryColor,
+          ),
+        ],
+      ),
     );
+  }
+
+  List<Widget> _buildGroupedItemCards() {
+    if (widget.groupOrders == null || widget.groupOrders!.length <= 1) {
+      return _fetchedOrder?.items?.map((item) => _buildItemCard(item)).toList() ?? [];
+    }
+
+    List<Widget> cards = [];
+    for (var gOrder in widget.groupOrders!) {
+      int orderId = gOrder is Orders ? gOrder.id ?? 0 : gOrder['id'] ?? 0;
+      
+      cards.add(_buildGroupHeader(orderId));
+
+      List<Items> orderItems = [];
+      
+      if (gOrder is Orders && gOrder.items != null && gOrder.items!.isNotEmpty) {
+        orderItems = gOrder.items!;
+      } else if (gOrder is Map && gOrder['items'] != null) {
+        try {
+          orderItems = (gOrder['items'] as List).map((e) => Items.fromJson(e)).toList();
+        } catch (_) {}
+      }
+
+      if (orderItems.isEmpty && _fetchedOrder?.items != null) {
+        orderItems = _fetchedOrder!.items!.where((item) => item.orderId == orderId).toList();
+      }
+
+      if (orderItems.isNotEmpty) {
+        cards.addAll(orderItems.map((item) => _buildItemCard(item)));
+      } else {
+        cards.add(
+          Padding(
+            padding: EdgeInsets.only(bottom: 16.h, left: 24.w),
+            child: CustomText(
+              text: 'Loading items...',
+              fontSize: 13.sp,
+              color: Colors.grey,
+            ),
+          )
+        );
+      }
+    }
+    return cards;
   }
 
   int _getCollectedItemsCount() {

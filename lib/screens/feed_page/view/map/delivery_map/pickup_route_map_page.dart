@@ -29,11 +29,13 @@ import '../../../../../utils/widgets/toast_message.dart';
 class PickupRouteMapPage extends StatefulWidget {
   final Orders order;
   final OrderDetailsBloc? bloc; // Add bloc parameter
+  final List<dynamic>? groupOrders;
 
   const PickupRouteMapPage({
     super.key,
     required this.order,
     this.bloc, // Make it optional
+    this.groupOrders,
   });
 
   @override
@@ -865,6 +867,7 @@ class _PickupRouteMapPageState extends State<PickupRouteMapPage> {
                                         'arrivalConfirmed':
                                             _hasReachedDestination ||
                                             _hasConfirmedArrival, // Pass arrival status
+                                        'groupOrders': widget.groupOrders,
                                       },
                                     );
                                   },

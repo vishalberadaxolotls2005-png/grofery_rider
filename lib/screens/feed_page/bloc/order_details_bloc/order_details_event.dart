@@ -9,11 +9,12 @@ abstract class OrderDetailsEvent extends Equatable {
 
 class FetchOrderDetails extends OrderDetailsEvent {
   final int orderId;
+  final List<int>? groupOrderIds;
 
-  const FetchOrderDetails(this.orderId);
+  const FetchOrderDetails(this.orderId, {this.groupOrderIds});
 
   @override
-  List<Object?> get props => [orderId];
+  List<Object?> get props => [orderId, groupOrderIds];
 }
 
 class MarkItemReachedDestination extends OrderDetailsEvent {
