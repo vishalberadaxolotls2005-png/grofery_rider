@@ -8,9 +8,11 @@ import '../../bloc/available_orders_bloc/available_orders_bloc.dart';
 import '../../bloc/available_orders_bloc/available_orders_event.dart';
 import '../../bloc/available_orders_bloc/available_orders_state.dart';
 import 'available_order_card.dart';
+import 'available_group_order_card.dart';
 import 'package:grofery_rider/l10n/app_localizations.dart';
 import '../../bloc/deliveryboy_status_update_bloc/deliveryboy_status_bloc.dart';
 import '../../bloc/deliveryboy_status_update_bloc/deliveryboy_status_event.dart';
+import '../../model/available_orders.dart';
 
 class AvailableOrdersSection extends StatefulWidget {
   final bool isDeliveryBoyActive; // Add this parameter
@@ -245,8 +247,13 @@ class _AvailableOrdersSectionState extends State<AvailableOrdersSection> {
                             );
                           }
 
-                          final order = allOrders[index];
-                          return AvailableOrderCard(order: order);
+                          final item = allOrders[index];
+                          if (item is PincodeClusterItem) {
+                            return AvailableGroupOrderCard(clusterItem: item);
+                          } else if (item is Orders) {
+                            return AvailableOrderCard(order: item);
+                          }
+                          return const SizedBox.shrink();
                         },
                       ),
                     ),

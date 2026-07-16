@@ -53,15 +53,17 @@ class AvailableOrdersBloc
         search: '',
       );
 
-      List<Orders> orders = [];
+      List<dynamic> orders = [];
       if (response['data'] != null && response['data']['clusters'] != null) {
         for (var cluster in response['data']['clusters']) {
+          final timeSlot = cluster['time_slot'] as String?;
           if (cluster['pincode_clusters'] != null) {
-            for (var pincodeCluster in cluster['pincode_clusters']) {
-              if (pincodeCluster['orders'] != null) {
-                for (var orderJson in pincodeCluster['orders']) {
-                  orders.add(Orders.fromJson(orderJson as Map<String, dynamic>));
-                }
+            for (var pincodeClusterJson in cluster['pincode_clusters']) {
+              final pincodeCluster = PincodeCluster.fromJson(pincodeClusterJson as Map<String, dynamic>);
+              if (pincodeCluster.orders != null && pincodeCluster.orders!.length == 1) {
+                orders.add(pincodeCluster.orders!.first);
+              } else {
+                orders.add(PincodeClusterItem(timeSlot: timeSlot, cluster: pincodeCluster));
               }
             }
           }
@@ -117,15 +119,17 @@ class AvailableOrdersBloc
         search: event.searchQuery,
       );
 
-      List<Orders> orders = [];
+      List<dynamic> orders = [];
       if (response['data'] != null && response['data']['clusters'] != null) {
         for (var cluster in response['data']['clusters']) {
+          final timeSlot = cluster['time_slot'] as String?;
           if (cluster['pincode_clusters'] != null) {
-            for (var pincodeCluster in cluster['pincode_clusters']) {
-              if (pincodeCluster['orders'] != null) {
-                for (var orderJson in pincodeCluster['orders']) {
-                  orders.add(Orders.fromJson(orderJson as Map<String, dynamic>));
-                }
+            for (var pincodeClusterJson in cluster['pincode_clusters']) {
+              final pincodeCluster = PincodeCluster.fromJson(pincodeClusterJson as Map<String, dynamic>);
+              if (pincodeCluster.orders != null && pincodeCluster.orders!.length == 1) {
+                orders.add(pincodeCluster.orders!.first);
+              } else {
+                orders.add(PincodeClusterItem(timeSlot: timeSlot, cluster: pincodeCluster));
               }
             }
           }
@@ -170,7 +174,7 @@ class AvailableOrdersBloc
       _isLoading = true;
       try {
         final currentState = state as AvailableOrdersLoaded;
-        List<Orders> currentOrders = List<Orders>.from(
+        List<dynamic> currentOrders = List<dynamic>.from(
           currentState.availableOrders,
         );
 
@@ -180,15 +184,17 @@ class AvailableOrdersBloc
           search: '',
         );
 
-        List<Orders> newOrders = [];
+        List<dynamic> newOrders = [];
         if (response['data'] != null && response['data']['clusters'] != null) {
           for (var cluster in response['data']['clusters']) {
+            final timeSlot = cluster['time_slot'] as String?;
             if (cluster['pincode_clusters'] != null) {
-              for (var pincodeCluster in cluster['pincode_clusters']) {
-                if (pincodeCluster['orders'] != null) {
-                  for (var orderJson in pincodeCluster['orders']) {
-                    newOrders.add(Orders.fromJson(orderJson as Map<String, dynamic>));
-                  }
+              for (var pincodeClusterJson in cluster['pincode_clusters']) {
+                final pincodeCluster = PincodeCluster.fromJson(pincodeClusterJson as Map<String, dynamic>);
+                if (pincodeCluster.orders != null && pincodeCluster.orders!.length == 1) {
+                  newOrders.add(pincodeCluster.orders!.first);
+                } else {
+                  newOrders.add(PincodeClusterItem(timeSlot: timeSlot, cluster: pincodeCluster));
                 }
               }
             }

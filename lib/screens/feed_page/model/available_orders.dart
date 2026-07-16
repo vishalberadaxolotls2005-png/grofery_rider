@@ -26,6 +26,7 @@ class AvailableOrdersData {
   final int from;
   final int to;
   final List<Orders> orders;
+  final List<OrderCluster>? clusters;
 
   AvailableOrdersData({
     required this.currentPage,
@@ -35,6 +36,7 @@ class AvailableOrdersData {
     required this.from,
     required this.to,
     required this.orders,
+    this.clusters,
   });
 
   factory AvailableOrdersData.fromJson(Map<String, dynamic> json) {
@@ -50,6 +52,10 @@ class AvailableOrdersData {
               ?.map((order) => Orders.fromJson(order))
               .toList() ??
           [],
+      clusters:
+          (json['clusters'] as List<dynamic>?)
+              ?.map((cluster) => OrderCluster.fromJson(cluster))
+              .toList(),
     );
   }
 }
@@ -614,4 +620,47 @@ class DeliveryTimeSlot {
       endTime: json['end_time'],
     );
   }
+}
+
+class OrderCluster {
+  final String? timeSlot;
+  final List<PincodeCluster>? pincodeClusters;
+
+  OrderCluster({this.timeSlot, this.pincodeClusters});
+
+  factory OrderCluster.fromJson(Map<String, dynamic> json) {
+    return OrderCluster(
+      timeSlot: json['time_slot'],
+      pincodeClusters: (json['pincode_clusters'] as List<dynamic>?)
+              ?.map((item) => PincodeCluster.fromJson(item))
+              .toList() ??
+          [],
+    );
+  }
+}
+
+class PincodeCluster {
+  final int? pincode;
+  final int? orderCount;
+  final List<Orders>? orders;
+
+  PincodeCluster({this.pincode, this.orderCount, this.orders});
+
+  factory PincodeCluster.fromJson(Map<String, dynamic> json) {
+    return PincodeCluster(
+      pincode: json['pincode'],
+      orderCount: json['order_count'],
+      orders: (json['orders'] as List<dynamic>?)
+              ?.map((order) => Orders.fromJson(order))
+              .toList() ??
+          [],
+    );
+  }
+}
+
+class PincodeClusterItem {
+  final String? timeSlot;
+  final PincodeCluster cluster;
+
+  PincodeClusterItem({this.timeSlot, required this.cluster});
 }
