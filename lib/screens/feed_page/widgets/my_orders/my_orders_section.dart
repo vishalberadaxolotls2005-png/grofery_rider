@@ -582,9 +582,18 @@ class _MyOrdersSectionState extends State<MyOrdersSection>
                               }
 
                               final order = filteredOrders[index];
+                              
+                              final groupOrders = filteredOrders
+                                  .where((o) =>
+                                      o.shippingZip != null &&
+                                      o.shippingZip == order.shippingZip &&
+                                      o.status == order.status)
+                                  .toList();
+
                               return MyOrderCard(
                                 order: order,
                                 isDarkTheme: widget.isDarkTheme,
+                                groupOrders: groupOrders.length > 1 ? groupOrders : null,
                               );
                             },
                           );

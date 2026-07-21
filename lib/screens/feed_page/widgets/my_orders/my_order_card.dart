@@ -15,8 +15,9 @@ import 'package:grofery_rider/utils/time_utils.dart';
 class MyOrderCard extends StatelessWidget {
   final Orders order;
   final bool isDarkTheme;
+  final List<dynamic>? groupOrders;
 
-  const MyOrderCard({super.key, required this.order, required this.isDarkTheme});
+  const MyOrderCard({super.key, required this.order, required this.isDarkTheme, this.groupOrders});
 
   @override
   Widget build(BuildContext context) {
@@ -28,6 +29,7 @@ class MyOrderCard extends StatelessWidget {
             'orderId': order.id!,
             'from': false,
             'sourceTab': 1, // 1 = My Orders tab
+            'groupOrders': groupOrders,
           });
         },
         child: CustomCard(

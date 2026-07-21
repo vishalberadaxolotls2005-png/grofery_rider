@@ -400,4 +400,34 @@ class MapService {
         )
         .toList();
   }
+
+  /// Combine route details from multiple orders in a group
+  static List<RouteDetails> combineRouteDetails(Orders mainOrder, List<dynamic>? groupOrders) {
+    if (groupOrders == null || groupOrders.isEmpty) {
+      return mainOrder.deliveryRoute?.routeDetails ?? [];
+    }
+
+    List<RouteDetails> combinedStores = [];
+    List<RouteDetails> combinedCustomers = [];
+    Set<int> addedStoreIds = {};
+
+    for (var dynamicOrder in groupOrders) {
+      if (dynamicOrder is Orders && dynamicOrder.deliveryRoute?.routeDetails != null) {
+        final details = dynamicOrder.deliveryRoute!.routeDetails!;
+        
+        for (var detail in details) {
+          if (detail.storeName?.toLowerCase() != 'customer location' && detail.storeId != null) {
+            if (!addedStoreIds.contains(detail.storeId)) {
+              combinedStores.add(detail);
+              addedStoreIds.add(detail.storeId!);
+            }
+          } else if (detail.storeName?.toLowerCase() == 'customer location') {
+             combinedCustomers.add(detail);
+          }
+        }
+      }
+    }
+
+    return [...combinedStores, ...combinedCustomers];
+  }
 }

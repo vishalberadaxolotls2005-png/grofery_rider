@@ -37,6 +37,7 @@ class _MapDeliveryPageState extends State<MapDeliveryPage> {
   final bool _hasReachedDestination = false;
   double _distanceToStores = 0.0;
   List<RouteDetails> _filteredStores = [];
+  List<RouteDetails>? _combinedRouteDetails;
 
   @override
   void initState() {
@@ -48,27 +49,22 @@ class _MapDeliveryPageState extends State<MapDeliveryPage> {
   }
 
   void _initializeData() {
-    // Get filtered stores
-    _filteredStores = MapService.getFilteredStores(
-      widget.order.deliveryRoute?.routeDetails,
+    _combinedRouteDetails = MapService.combineRouteDetails(
+      widget.order,
+      widget.groupOrders,
     );
 
+    // Get filtered stores
+    _filteredStores = MapService.getFilteredStores(_combinedRouteDetails);
 
-    if (widget.order.deliveryRoute != null) {
-      if (widget.order.deliveryRoute!.routeDetails != null) {
-        for (
-          int i = 0;
-          i < widget.order.deliveryRoute!.routeDetails!.length;
-          i++
-        ) {
-          //
-        }
+    if (_combinedRouteDetails != null) {
+      for (int i = 0; i < _combinedRouteDetails!.length; i++) {
+        //
       }
     }
 
     // If we have route details, try to calculate distance (will be updated when location is available)
-    if (widget.order.deliveryRoute?.routeDetails != null &&
-        widget.order.deliveryRoute!.routeDetails!.isNotEmpty) {}
+    if (_combinedRouteDetails != null && _combinedRouteDetails!.isNotEmpty) {}
   }
 
   Future<void> _getCurrentLocation() async {
@@ -110,11 +106,9 @@ class _MapDeliveryPageState extends State<MapDeliveryPage> {
       double fallbackLat = 23.2488453; // Default Bhuj coordinates
       double fallbackLng = 69.6696795;
 
-      if (widget.order.deliveryRoute?.routeDetails != null &&
-          widget.order.deliveryRoute!.routeDetails!.isNotEmpty) {
-        final lastIndex = widget.order.deliveryRoute!.routeDetails!.length - 1;
-        final shippingAddress =
-            widget.order.deliveryRoute!.routeDetails![lastIndex];
+      if (_combinedRouteDetails != null && _combinedRouteDetails!.isNotEmpty) {
+        final lastIndex = _combinedRouteDetails!.length - 1;
+        final shippingAddress = _combinedRouteDetails![lastIndex];
 
         if (shippingAddress.latitude != null &&
             shippingAddress.longitude != null) {
@@ -140,7 +134,7 @@ class _MapDeliveryPageState extends State<MapDeliveryPage> {
     if (_currentLocation != null) {
       _distanceToStores = MapService.calculateDistanceToStores(
         _currentLocation,
-        widget.order.deliveryRoute?.routeDetails,
+        _combinedRouteDetails,
       );
 
       // Force UI update
@@ -149,8 +143,7 @@ class _MapDeliveryPageState extends State<MapDeliveryPage> {
   }
 
   void _fitMapToAllPoints() {
-    if (_currentLocation == null ||
-        widget.order.deliveryRoute?.routeDetails == null) {
+    if (_currentLocation == null || _combinedRouteDetails == null) {
       return;
     }
 
@@ -191,9 +184,7 @@ class _MapDeliveryPageState extends State<MapDeliveryPage> {
   }
 
   LatLng _getDestinationLocation() {
-    return LocationService.getDestinationLocation(
-      widget.order.deliveryRoute?.routeDetails,
-    );
+    return LocationService.getDestinationLocation(_combinedRouteDetails);
   }
 
   List<Polyline> _generateDashedRoute() {
@@ -201,17 +192,14 @@ class _MapDeliveryPageState extends State<MapDeliveryPage> {
 
     final routePoints = MapService.generatePickupRoute(
       _currentLocation,
-      widget.order.deliveryRoute?.routeDetails,
+      _combinedRouteDetails,
     );
 
     return MapService.generateDashedRoute(routePoints);
   }
 
   List<Marker> _buildAllMarkers() {
-    return MapService.buildAllMarkers(
-      _currentLocation,
-      widget.order.deliveryRoute?.routeDetails,
-    );
+    return MapService.buildAllMarkers(_currentLocation, _combinedRouteDetails);
   }
 
   void _onNavigationPressed() {

@@ -1,8 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import '../model/available_orders.dart';
-import '../bloc/items_collected_bloc/items_collected_bloc.dart';
-import '../bloc/items_collected_bloc/items_collected_state.dart';
 import '../widgets/orderdetails_widgets/item_card.dart';
 
 class ItemCardService {

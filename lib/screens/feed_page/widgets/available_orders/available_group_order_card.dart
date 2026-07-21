@@ -163,7 +163,7 @@ class _AvailableGroupOrderCardContent extends StatelessWidget {
                       if (firstOrder?.deliveryRoute?.routeDetails != null &&
                           firstOrder!.deliveryRoute!.routeDetails!.isNotEmpty)
                         GestureDetector(
-                          onTap: () => _showRouteOnMap(context, firstOrder),
+                          onTap: () => _navigateToMapDeliveryPage(context, firstOrder),
                           child: Container(
                             padding: EdgeInsets.all(4.w),
                             decoration: BoxDecoration(
@@ -439,30 +439,5 @@ class _AvailableGroupOrderCardContent extends StatelessWidget {
     }
   }
 
-  void _showRouteOnMap(BuildContext context, Orders order) {
-    if (order.deliveryRoute?.routeDetails != null &&
-        order.deliveryRoute!.routeDetails!.isNotEmpty) {
-      try {
-        context.push(
-          AppRoutes.pickupRouteMap,
-          extra: {
-            'order': order,
-            'groupOrders': clusterItem.cluster.orders,
-          },
-        );
-      } catch (e) {
-        ToastManager.show(
-          context: context,
-          message: AppLocalizations.of(context)!.navigationError(e.toString()),
-          type: ToastType.error,
-        );
-      }
-    } else {
-      ToastManager.show(
-        context: context,
-        message: AppLocalizations.of(context)!.routeDetailsNotAvailableForMapView,
-        type: ToastType.error,
-      );
-    }
-  }
+
 }

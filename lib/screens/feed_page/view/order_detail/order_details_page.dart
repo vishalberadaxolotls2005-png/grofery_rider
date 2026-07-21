@@ -426,7 +426,7 @@ class _OrderDetailsPageState extends State<OrderDetailsPage>
                         onPressed: () {
                           context.push(
                             AppRoutes.pickupRouteMap,
-                            extra: {'order': order},
+                            extra: {'order': order, 'groupOrders': widget.groupOrders},
                           );
                         },
                         tooltip: AppLocalizations.of(context)!.goToMap,
@@ -480,11 +480,11 @@ class _OrderDetailsPageState extends State<OrderDetailsPage>
                         order.status != "out_for_delivery"
                             ? context.push(
                               AppRoutes.mapDelivery,
-                              extra: {'order': order},
+                              extra: {'order': order, 'groupOrders': widget.groupOrders},
                             )
                             : context.push(
                               AppRoutes.pickupRouteMap,
-                              extra: {'order': order},
+                              extra: {'order': order, 'groupOrders': widget.groupOrders},
                             );
                       },
                       tooltip: AppLocalizations.of(context)!.goToMap,
@@ -688,6 +688,7 @@ class _OrderDetailsPageState extends State<OrderDetailsPage>
             extra: {
               'order': _fetchedOrder!,
               'bloc': context.read<OrderDetailsBloc>(),
+              'groupOrders': widget.groupOrders,
             },
           );
         },
@@ -1117,6 +1118,7 @@ class _OrderDetailsPageState extends State<OrderDetailsPage>
           extra: {
             'order': _fetchedOrder!,
             'bloc': context.read<OrderDetailsBloc>(),
+            'groupOrders': widget.groupOrders,
           },
         );
       },
