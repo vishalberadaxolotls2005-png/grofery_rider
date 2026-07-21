@@ -17,21 +17,31 @@ class ItemsCollected extends ItemsCollectedEvent {
 class ItemsCollectedWithOtp extends ItemsCollectedEvent {
   final String orderItemId;
   final String otp;
+  final int? quantity;
+  final String? reason;
 
   ItemsCollectedWithOtp({
     required this.orderItemId,
     required this.otp,
+    this.quantity,
+    this.reason,
   });
 
   @override
-  List<Object> get props => [orderItemId, otp];
+  List<Object> get props => [orderItemId, otp, quantity ?? -1, reason ?? ''];
 }
 
 class ItemsDelivered extends ItemsCollectedEvent {
   final String orderItemId;
+  final int? quantity;
+  final String? reason;
 
-  ItemsDelivered(this.orderItemId);
+  ItemsDelivered({
+    required this.orderItemId,
+    this.quantity,
+    this.reason,
+  });
 
   @override
-  List<Object> get props => [orderItemId];
+  List<Object> get props => [orderItemId, quantity ?? -1, reason ?? ''];
 } 

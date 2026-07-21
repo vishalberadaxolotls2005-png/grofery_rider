@@ -755,7 +755,7 @@ class _OrderDetailsPageState extends State<OrderDetailsPage>
     }
   }
 
-  void _deliverItemWithoutOtp(Items item) async {
+  void _deliverItemWithoutOtp(Items item, int? quantity, String? reason) async {
     if (item.id != null) {
       setState(() {
         _processingItemIds.add(item.id.toString());
@@ -763,7 +763,11 @@ class _OrderDetailsPageState extends State<OrderDetailsPage>
 
       // Dispatch the API call to mark item as delivered
       context.read<ItemsCollectedBloc>().add(
-        ItemsDelivered(item.id.toString()),
+        ItemsDelivered(
+          orderItemId: item.id.toString(),
+          quantity: quantity,
+          reason: reason,
+        ),
       );
     }
   }
@@ -803,17 +807,17 @@ class _OrderDetailsPageState extends State<OrderDetailsPage>
       isCollectingAll: _isCollectingAll,
       fetchedOrder: _fetchedOrder,
       onCollect: () => _collectItem(item),
-      onDelivered: () => _deliverItemWithoutOtp(item),
+      onDelivered: (quantity, reason) => _deliverItemWithoutOtp(item, quantity, reason),
       onReachedDestination: () => _markItemReachedDestination(item),
-      onItemOtpTap: _showItemOtpDialog,
+      onItemOtpTap: (item, quantity, reason) => _showItemOtpDialog(item, quantity, reason),
     );
   }
 
-  void _showItemOtpDialog(Items item) async {
+  void _showItemOtpDialog(Items item, int? quantity, String? reason) async {
     bool requiresOtp = item.product?.requiresOtp == 1;
 
     if (!requiresOtp) {
-      _deliverItemWithoutOtp(item);
+      _deliverItemWithoutOtp(item, quantity, reason);
       return;
     }
 
@@ -831,7 +835,12 @@ class _OrderDetailsPageState extends State<OrderDetailsPage>
       }
 
       context.read<ItemsCollectedBloc>().add(
-        ItemsCollectedWithOtp(orderItemId: item.id.toString(), otp: otp),
+        ItemsCollectedWithOtp(
+          orderItemId: item.id.toString(),
+          otp: otp,
+          quantity: quantity,
+          reason: reason,
+        ),
       );
     }
   }

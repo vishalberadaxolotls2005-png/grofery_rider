@@ -59,7 +59,12 @@ class ItemsCollectedBloc extends Bloc<ItemsCollectedEvent, ItemsCollectedState> 
     try {
       emit(ItemsCollectedLoading());
 
-      final response = await ItemsCollectedRepo().itemsDelivered(event.orderItemId, event.otp);
+      final response = await ItemsCollectedRepo().itemsDelivered(
+        event.orderItemId,
+        event.otp,
+        quantity: event.quantity,
+        reason: event.reason,
+      );
 
 
       // Check if success is true OR if message contains "already has this status"
@@ -95,7 +100,12 @@ class ItemsCollectedBloc extends Bloc<ItemsCollectedEvent, ItemsCollectedState> 
     try {
       emit(ItemsCollectedLoading());
 
-      final response = await ItemsCollectedRepo().itemsDelivered(event.orderItemId, null);
+      final response = await ItemsCollectedRepo().itemsDelivered(
+        event.orderItemId,
+        null,
+        quantity: event.quantity,
+        reason: event.reason,
+      );
 
 
       // Check if success is true OR if message contains "already has this status"

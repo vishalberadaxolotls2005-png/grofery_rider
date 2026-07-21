@@ -14,9 +14,9 @@ class ItemCardService {
     required bool isCollectingAll,
     required Orders? fetchedOrder,
     required VoidCallback onCollect,
-    required VoidCallback onDelivered,
+    required Function(int?, String?) onDelivered,
     required VoidCallback onReachedDestination,
-    required Function(Items) onItemOtpTap,
+    required Function(Items, int?, String?) onItemOtpTap,
   }) {
     // Check if item is collected/delivered based strictly on API status
     final bool isCollected = item.status?.toLowerCase() == 'collected' ||
@@ -36,7 +36,7 @@ class ItemCardService {
         isLoading: isLoading,
         orderStatus: fetchedOrder?.status,
         isOtpVerified: item.otpVerified == 1,
-        onTap: (isCollected && requiresOtp && !isDelivered) ? () => onItemOtpTap(item) : null,
+        onTap: (isCollected && requiresOtp && !isDelivered) ? (quantity, reason) => onItemOtpTap(item, quantity, reason) : null,
         onCollect: onCollect,
         onDelivered: onDelivered,
         onReachedDestination: onReachedDestination,
