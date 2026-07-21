@@ -10,6 +10,7 @@ import 'accept_order_state.dart';
 class AcceptOrderBloc extends Bloc<AcceptOrderEvent, AcceptOrderState> {
   AcceptOrderBloc() : super(AcceptOrderInitial()) {
     on<AcceptOrder>(_onAcceptOrder);
+    on<AcceptGroupOrder>(_onAcceptGroupOrder);
   }
 
   Future<void> _onAcceptOrder(
@@ -45,6 +46,46 @@ class AcceptOrderBloc extends Bloc<AcceptOrderEvent, AcceptOrderState> {
       if (kDebugMode) {
 
       }
+      emit(AcceptOrderError(e.toString().replaceAll('Exception: ', '')));
+    }
+  }
+
+  Future<void> _onAcceptGroupOrder(
+    AcceptGroupOrder event,
+    Emitter<AcceptOrderState> emit,
+  ) async {
+    try {
+      emit(AcceptOrderLoading());
+
+      int successCount = 0;
+      String lastError = '';
+
+      for (int id in event.orderIds) {
+        try {
+          final response = await AcceptOrderRepo().updateAcceptOrder(
+            orderId: id,
+          );
+          if (response['success'] == true) {
+            successCount++;
+          } else {
+            lastError = response['message'] ?? 'Failed to accept order $id';
+          }
+        } catch (e) {
+          lastError = e.toString().replaceAll('Exception: ', '');
+        }
+      }
+
+      if (successCount > 0) {
+        emit(
+          AcceptOrderSuccess(
+            'Accepted $successCount out of ${event.orderIds.length} orders successfully',
+          ),
+        );
+        emit(AcceptOrderCompleted(event.orderIds.first.toString()));
+      } else {
+        emit(AcceptOrderError(lastError.isNotEmpty ? lastError : 'Failed to accept group orders'));
+      }
+    } catch (e) {
       emit(AcceptOrderError(e.toString().replaceAll('Exception: ', '')));
     }
   }

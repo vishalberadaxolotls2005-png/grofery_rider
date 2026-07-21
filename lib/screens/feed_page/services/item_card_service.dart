@@ -18,36 +18,29 @@ class ItemCardService {
     required VoidCallback onReachedDestination,
     required Function(Items) onItemOtpTap,
   }) {
-    return BlocConsumer<ItemsCollectedBloc, ItemsCollectedState>(
-      listener: (context, state) {
-        // No need to handle state changes here since main BlocConsumer handles it
-      },
-      builder: (context, state) {
-        // Check if item is collected/delivered based strictly on API status
-        final bool isCollected = item.status?.toLowerCase() == 'collected' ||
-                                item.status?.toLowerCase() == 'delivered';
-        final bool isDelivered = item.status?.toLowerCase() == 'delivered';
+    // Check if item is collected/delivered based strictly on API status
+    final bool isCollected = item.status?.toLowerCase() == 'collected' ||
+                            item.status?.toLowerCase() == 'delivered';
+    final bool isDelivered = item.status?.toLowerCase() == 'delivered';
 
-        final bool requiresOtp = item.product?.requiresOtp == 1;
-        final bool isLoading = isCollectingAll || processingItemIds.contains(item.id.toString());
+    final bool requiresOtp = item.product?.requiresOtp == 1;
+    final bool isLoading = isCollectingAll || processingItemIds.contains(item.id.toString());
 
-        return Padding(
-          padding: const EdgeInsets.only(bottom: 8.0),
-          child: ItemCard(
-            item: item,
-            from: from,
-            isCollected: isCollected,
-            isDelivered: isDelivered,
-            isLoading: isLoading,
-            orderStatus: fetchedOrder?.status,
-            isOtpVerified: item.otpVerified == 1,
-            onTap: (isCollected && requiresOtp && !isDelivered) ? () => onItemOtpTap(item) : null,
-            onCollect: onCollect,
-            onDelivered: onDelivered,
-            onReachedDestination: onReachedDestination,
-          ),
-        );
-      },
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8.0),
+      child: ItemCard(
+        item: item,
+        from: from,
+        isCollected: isCollected,
+        isDelivered: isDelivered,
+        isLoading: isLoading,
+        orderStatus: fetchedOrder?.status,
+        isOtpVerified: item.otpVerified == 1,
+        onTap: (isCollected && requiresOtp && !isDelivered) ? () => onItemOtpTap(item) : null,
+        onCollect: onCollect,
+        onDelivered: onDelivered,
+        onReachedDestination: onReachedDestination,
+      ),
     );
   }
 }

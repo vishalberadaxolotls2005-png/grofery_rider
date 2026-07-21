@@ -13,3 +13,12 @@ class AcceptOrder extends AcceptOrderEvent {
   @override
   List<Object> get props => [orderId];
 }
+
+class AcceptGroupOrder extends AcceptOrderEvent {
+  final List<int> orderIds;
+
+  AcceptGroupOrder(this.orderIds);
+
+  @override
+  List<Object> get props => [orderIds];
+}

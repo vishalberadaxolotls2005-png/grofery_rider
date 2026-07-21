@@ -310,40 +310,30 @@ class _OrderDetailsPageState extends State<OrderDetailsPage>
               }
             } else {
               // Individual item success
-              String? processedItemId;
-              // Try to find which ID in our processing set just finished
-              // This is a bit tricky with Bloc but since we update state locally,
-              // we can just refresh the whole order or find the one that matches.
-              // For now, we rely on the fact that we can clear all since it's most likely the one that just finished.
-
               setState(() {
-                // If we have items, we try to find which one would have transitioned
-                if (_fetchedOrder?.items != null) {
-                  // Note: Since we can't easily know which specific event finished if multiple were concurrent,
-                  // we refresh from API to be safe, but also do a local optimistic update.
-                  // For simplicity, we clear the set once we get a success.
+                if (_fetchedOrder?.items != null && state.itemId != null) {
+                  List<Items> updatedItems = _fetchedOrder!.items!.map((item) {
+                    if (item.id.toString() == state.itemId) {
+                      // Determine if it was a collection or delivery based on the explicit action
+                      String newStatus = state.action ?? 'collected';
+                      return item.copyWith(status: newStatus);
+                    }
+                    return item;
+                  }).toList();
+                  _fetchedOrder = _fetchedOrder!.copyWith(items: updatedItems);
+                  
+                  _processingItemIds.remove(state.itemId);
+                } else if (_fetchedOrder?.items != null) {
                   _processingItemIds.clear();
                 }
               });
 
-              context.read<OrderDetailsBloc>().add(
-                FetchOrderDetails(
-                  widget.orderId,
-                  groupOrderIds: _getGroupOrderIds(),
-                ),
-              );
-
+              String action = state.action ?? 'collected';
               ToastManager.show(
                 context: context,
-                message:
-                    (widget.from &&
-                            _fetchedOrder?.status?.toLowerCase() != 'assigned')
-                        ? AppLocalizations.of(
-                          context,
-                        )!.itemDeliveredSuccessfully
-                        : AppLocalizations.of(
-                          context,
-                        )!.itemCollectedSuccessfully,
+                message: action == 'delivered'
+                        ? AppLocalizations.of(context)!.itemDeliveredSuccessfully
+                        : AppLocalizations.of(context)!.itemCollectedSuccessfully,
                 type: ToastType.success,
               );
             }
@@ -366,7 +356,33 @@ class _OrderDetailsPageState extends State<OrderDetailsPage>
               if (state is OrderDetailsSuccess) {
                 // Check if we need to restore reachedDestination status from previous state
                 setState(() {
-                  _fetchedOrder = state.order;
+                  Orders newOrder = state.order;
+                  // Preserve item statuses locally in case backend is slow to update
+                  if (_fetchedOrder != null && _fetchedOrder!.items != null && newOrder.items != null) {
+                    List<Items> mergedItems = newOrder.items!.map((newItem) {
+                      Items? oldItem;
+                      try {
+                        oldItem = _fetchedOrder!.items!.firstWhere((i) => i.id == newItem.id);
+                      } catch (e) {
+                        oldItem = null;
+                      }
+                      
+                      if (oldItem != null) {
+                        // If it was collected locally, keep it collected unless backend says it's delivered
+                        if (oldItem.status?.toLowerCase() == 'collected' && newItem.status?.toLowerCase() != 'delivered') {
+                          return newItem.copyWith(status: 'collected');
+                        }
+                        // If it was delivered locally, keep it delivered
+                        if (oldItem.status?.toLowerCase() == 'delivered') {
+                          return newItem.copyWith(status: 'delivered');
+                        }
+                      }
+                      return newItem;
+                    }).toList();
+                    newOrder = newOrder.copyWith(items: mergedItems);
+                  }
+                  
+                  _fetchedOrder = newOrder;
 
                   // Reset confetti flag for new order data
                   if (_fetchedOrder?.id != widget.orderId) {
@@ -1041,16 +1057,20 @@ class _OrderDetailsPageState extends State<OrderDetailsPage>
 
       List<Items> orderItems = [];
       
-      if (gOrder is Orders && gOrder.items != null && gOrder.items!.isNotEmpty) {
-        orderItems = gOrder.items!;
-      } else if (gOrder is Map && gOrder['items'] != null) {
-        try {
-          orderItems = (gOrder['items'] as List).map((e) => Items.fromJson(e)).toList();
-        } catch (_) {}
-      }
-
-      if (orderItems.isEmpty && _fetchedOrder?.items != null) {
+      // ALWAYS use the live _fetchedOrder state as the source of truth if available
+      if (_fetchedOrder?.items != null && _fetchedOrder!.items!.isNotEmpty) {
         orderItems = _fetchedOrder!.items!.where((item) => item.orderId == orderId).toList();
+      }
+      
+      // Fallback to widget properties if live data isn't available yet
+      if (orderItems.isEmpty) {
+        if (gOrder is Orders && gOrder.items != null && gOrder.items!.isNotEmpty) {
+          orderItems = gOrder.items!;
+        } else if (gOrder is Map && gOrder['items'] != null) {
+          try {
+            orderItems = (gOrder['items'] as List).map((e) => Items.fromJson(e)).toList();
+          } catch (_) {}
+        }
       }
 
       if (orderItems.isNotEmpty) {

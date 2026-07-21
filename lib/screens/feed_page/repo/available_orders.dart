@@ -20,7 +20,9 @@ class AvailableOrdersRepo {
       // }
 
       final locationData = LocationTracker().currentLocation;
-      if (locationData != null && locationData.latitude != null && locationData.longitude != null) {
+      if (locationData != null &&
+          locationData.latitude != null &&
+          locationData.longitude != null) {
         body['latitude'] = locationData.latitude;
         body['longitude'] = locationData.longitude;
       } else {
@@ -34,12 +36,11 @@ class AvailableOrdersRepo {
         useAuthToken: true,
         params: body,
       );
-      
+
       log('Available orders API response: $response');
-      
+
       return response;
     } catch (error) {
-
       throw Exception('Error occurred');
     }
   }

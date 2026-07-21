@@ -356,12 +356,25 @@ class _AvailableGroupOrderCardContent extends StatelessWidget {
                       ),
                     ),
                     onSwipe: () async {
-                      if (!isLoading && firstOrder?.id != null) {
-                        // Accept the first order which should ideally accept the group
-                        context.read<AcceptOrderBloc>().add(
-                          AcceptOrder(firstOrder!.id!),
-                        );
-                      } else if (firstOrder == null) {
+                      if (!isLoading && pincodeCluster.orders != null && pincodeCluster.orders!.isNotEmpty) {
+                        // Extract all order IDs in the group
+                        List<int> orderIds = pincodeCluster.orders!
+                            .where((o) => o.id != null)
+                            .map((o) => o.id!)
+                            .toList();
+
+                        if (orderIds.isNotEmpty) {
+                          context.read<AcceptOrderBloc>().add(
+                            AcceptGroupOrder(orderIds),
+                          );
+                        } else {
+                          ToastManager.show(
+                            context: context,
+                            message: "No valid orders found in this group.",
+                            type: ToastType.error,
+                          );
+                        }
+                      } else if (pincodeCluster.orders == null || pincodeCluster.orders!.isEmpty) {
                         ToastManager.show(
                           context: context,
                           message: "No valid orders found in this group.",

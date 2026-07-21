@@ -321,95 +321,28 @@ class ItemCard extends StatelessWidget {
                       ],
                     ] else ...[
                       // Show "Collect" button when item is not collected
-                      // Check if order status is "assigned" to show collect button
-                      if (orderStatus?.toLowerCase() == 'assigned') ...[
-                        if (isCollected) ...[
-                          // Show tick mark and "Collected" text when item is collected
-                          // BUT if order status is "out_for_delivery", show "Deliver" button instead
-                          if (orderStatus?.toLowerCase() ==
-                                  'out_for_delivery' ||
-                              item.reachedDestination == true) ...[
-                            // Show "Deliver" button when reached destination and item is collected
-                            CustomButton(
-                              width: 100.w,
-                              height: 40.h,
-                              textSize: 15.sp,
-                              text: AppLocalizations.of(context)!.deliver,
-                              onPressed: () {
-                                // If OTP dialog should open, call onTap (which opens OTP dialog), otherwise call onDelivered
-                                if (shouldOpenOtpDialog) {
-                                  onTap?.call();
-                                } else {
-                                  onDelivered?.call();
-                                }
-                              },
-                              isLoading: isLoading,
-                              backgroundColor: AppColors.primaryColor,
-                              textColor: Colors.white,
-                              borderRadius: 8.r,
-                              padding: EdgeInsets.symmetric(
-                                horizontal: 16.w,
-                                vertical: 8.h,
-                              ),
-                              textStyle: TextStyle(
-                                fontSize: 12.sp,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ] else ...[
-                            // Show tick mark and "Collected" text for other cases
-                            Column(
-                              children: [
-                                Icon(
-                                  Icons.check_circle,
-                                  color: Colors.green,
-                                  size: 24.sp,
-                                ),
-                                SizedBox(height: 4.h),
-                                CustomText(
-                                  text: 'Collected',
-                                  fontSize: 12.sp,
-                                  color: Colors.green,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ],
-                            ),
-                          ],
-                        ] else ...[
-                          // Show "Collect" button when item is not collected
-                          CustomButton(
-                            width: 100.w,
-                            height: 40.h,
-                            textSize: 15.sp,
-                            text: AppLocalizations.of(context)!.collect,
-                            onPressed: (item.status?.toLowerCase() == 'preparing' || item.status?.toLowerCase() == 'ready' || orderStatus?.toLowerCase() == 'assigned') 
-                                ? () {
-                                    if (orderStatus?.toLowerCase() == 'assigned') {
-                                      onCollect?.call();
-                                    } else if (from) {
-                                      onDelivered?.call();
-                                    } else {
-                                      onCollect?.call();
-                                    }
-                                  } 
-                                : null,
-                            isLoading: isLoading,
-                            backgroundColor: (item.status?.toLowerCase() == 'preparing' || item.status?.toLowerCase() == 'ready' || orderStatus?.toLowerCase() == 'assigned')
-                                ? AppColors.primaryColor
-                                : Colors.grey,
-                            textColor: Colors.white,
-                            borderRadius: 8.r,
-                            padding: EdgeInsets.symmetric(
-                              horizontal: 16.w,
-                              vertical: 8.h,
-                            ),
-                            textStyle: TextStyle(
-                              fontSize: 12.sp,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ],
-                      ],
+                      // Show "Collect" button when item is not collected
+                      CustomButton(
+                        width: 100.w,
+                        height: 40.h,
+                        textSize: 15.sp,
+                        text: AppLocalizations.of(context)!.collect,
+                        onPressed: () {
+                          onCollect?.call();
+                        },
+                        isLoading: isLoading,
+                        backgroundColor: AppColors.primaryColor,
+                        textColor: Colors.white,
+                        borderRadius: 8.r,
+                        padding: EdgeInsets.symmetric(
+                          horizontal: 16.w,
+                          vertical: 8.h,
+                        ),
+                        textStyle: TextStyle(
+                          fontSize: 12.sp,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
                     ],
                   ],
                 ),

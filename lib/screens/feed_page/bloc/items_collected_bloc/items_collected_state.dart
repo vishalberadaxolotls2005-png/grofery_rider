@@ -11,11 +11,13 @@ class ItemsCollectedLoading extends ItemsCollectedState {}
 
 class ItemsCollectedSuccess extends ItemsCollectedState {
   final String message;
+  final String? itemId;
+  final String? action;
 
-  ItemsCollectedSuccess(this.message);
+  ItemsCollectedSuccess(this.message, {this.itemId, this.action});
 
   @override
-  List<Object> get props => [message];
+  List<Object?> get props => [message, itemId, action];
 }
 
 class ItemsCollectedError extends ItemsCollectedState {
