@@ -13,11 +13,12 @@ class ItemsCollectedSuccess extends ItemsCollectedState {
   final String message;
   final String? itemId;
   final String? action;
+  final Map<String, dynamic>? responseData;
 
-  ItemsCollectedSuccess(this.message, {this.itemId, this.action});
+  ItemsCollectedSuccess(this.message, {this.itemId, this.action, this.responseData});
 
   @override
-  List<Object?> get props => [message, itemId, action];
+  List<Object?> get props => [message, itemId, action, responseData];
 }
 
 class ItemsCollectedError extends ItemsCollectedState {

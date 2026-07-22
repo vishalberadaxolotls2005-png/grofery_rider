@@ -314,13 +314,43 @@ class _OrderDetailsPageState extends State<OrderDetailsPage>
                 if (_fetchedOrder?.items != null && state.itemId != null) {
                   List<Items> updatedItems = _fetchedOrder!.items!.map((item) {
                     if (item.id.toString() == state.itemId) {
-                      // Determine if it was a collection or delivery based on the explicit action
                       String newStatus = state.action ?? 'collected';
+                      if (state.responseData != null && state.responseData!['order_item'] != null) {
+                        try {
+                          Items updatedItem = Items.fromJson(state.responseData!['order_item']);
+                          return updatedItem.copyWith(
+                            product: item.product,
+                            variant: item.variant,
+                            store: item.store,
+                          );
+                        } catch (e) {
+                          return item.copyWith(status: newStatus);
+                        }
+                      }
                       return item.copyWith(status: newStatus);
                     }
                     return item;
                   }).toList();
-                  _fetchedOrder = _fetchedOrder!.copyWith(items: updatedItems);
+                  
+                  if (state.responseData != null && state.responseData!['order'] != null) {
+                    try {
+                      Orders updatedOrderData = Orders.fromJson(state.responseData!['order']);
+                      _fetchedOrder = _fetchedOrder!.copyWith(
+                        items: updatedItems,
+                        subtotal: updatedOrderData.subtotal ?? _fetchedOrder!.subtotal,
+                        totalPayable: updatedOrderData.totalPayable ?? _fetchedOrder!.totalPayable,
+                        finalTotal: updatedOrderData.finalTotal ?? _fetchedOrder!.finalTotal,
+                        total: updatedOrderData.total ?? _fetchedOrder!.total,
+                        status: updatedOrderData.status ?? _fetchedOrder!.status,
+                        deliveryCharge: updatedOrderData.deliveryCharge ?? _fetchedOrder!.deliveryCharge,
+                        earnings: updatedOrderData.earnings ?? _fetchedOrder!.earnings,
+                      );
+                    } catch (e) {
+                      _fetchedOrder = _fetchedOrder!.copyWith(items: updatedItems);
+                    }
+                  } else {
+                    _fetchedOrder = _fetchedOrder!.copyWith(items: updatedItems);
+                  }
                   
                   _processingItemIds.remove(state.itemId);
                 } else if (_fetchedOrder?.items != null) {

@@ -35,7 +35,7 @@ class ItemsCollectedBloc extends Bloc<ItemsCollectedEvent, ItemsCollectedState> 
             ? 'Item already collected' 
             : (isBackendSqlError ? 'Bypassed Backend SQL Error for testing' : (response['message'] ?? 'Items collected successfully'));
         
-        emit(ItemsCollectedSuccess(successMessage, itemId: event.orderItemId, action: 'collected'));
+        emit(ItemsCollectedSuccess(successMessage, itemId: event.orderItemId, action: 'collected', responseData: response['data']));
 
       } else {
         emit(ItemsCollectedError(message));
@@ -78,7 +78,7 @@ class ItemsCollectedBloc extends Bloc<ItemsCollectedEvent, ItemsCollectedState> 
         String successMessage = isAlreadyCollected 
             ? 'Item already delivered' 
             : (isBackendSqlError ? 'Bypassed Backend SQL Error for testing' : (response['message'] ?? 'Item collected with OTP successfully'));
-        emit(ItemsCollectedSuccess(successMessage, itemId: event.orderItemId, action: 'delivered'));
+        emit(ItemsCollectedSuccess(successMessage, itemId: event.orderItemId, action: 'delivered', responseData: response['data']));
       } else {
         emit(ItemsCollectedError(message));
       }
@@ -119,7 +119,7 @@ class ItemsCollectedBloc extends Bloc<ItemsCollectedEvent, ItemsCollectedState> 
         String successMessage = isAlreadyDelivered 
             ? 'Item already delivered' 
             : (isBackendSqlError ? 'Bypassed Backend SQL Error for testing' : (response['message'] ?? 'Item delivered successfully'));
-        emit(ItemsCollectedSuccess(successMessage, itemId: event.orderItemId, action: 'delivered'));
+        emit(ItemsCollectedSuccess(successMessage, itemId: event.orderItemId, action: 'delivered', responseData: response['data']));
       } else {
         emit(ItemsCollectedError(message));
       }
